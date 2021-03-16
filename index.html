@@ -1,0 +1,405 @@
+<!DOCTYPE HMTL>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>SpaceRun</title>
+
+        <style>
+            body { margin: 0; }
+            canvas { 
+                display: block; 
+                height: 100%;
+                width: 100%,
+            }
+            #loading {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                font-size: xx-large;
+                font-family: sans-serif;
+            }
+            #loading>div>div {
+                padding: 2px;
+            }
+            .progress {
+                width: 50vw;
+                border: 1px solid black;
+            }
+            #progressbar {
+                width: 0;
+                transition: width ease-out .5s;
+                height: 1em;
+                background-color: #888;
+                background-image: linear-gradient(
+                    -45deg, 
+                    rgba(255, 255, 255, .5) 25%, 
+                    transparent 25%, 
+                    transparent 50%, 
+                    rgba(255, 255, 255, .5) 50%, 
+                    rgba(5, 16, 82, 0.5) 75%, 
+                    transparent 75%, 
+                    transparent
+                );
+                background-size: 50px 50px;
+                animation: progressanim 2s linear infinite;
+            }
+            @keyframes progressanim {
+                0% {background-position: 50px 50px;}
+                100% {background-position: 0 0;}
+            }
+
+            .modal-content {
+                display: none;
+                position: fixed;
+                left:0;
+                top:0;
+                right: 0;
+                bottom:0;
+                background-color: #fefefe00;
+                margin: auto;
+                margin-top: 100px;
+                padding:0;
+                width: 80%;
+
+                z-index: 10;
+                animation-name: animatetop;
+                animation-duration: 0.1s
+            }
+            @keyframes animatetop {
+                from {top: -300px; opacity: 0}
+                to {top: 0; opacity: 0}
+            }
+
+            .modal-header {
+                /* background-color: #491212; */
+                padding:10px 0;
+                /* color: white; */
+                margin-bottom: 10px;
+                text-align: center;
+                font-size: 40px;
+                width: 100%;
+            }
+
+            .modal-body {
+                /* background-color: rgb(65, 62, 66);
+                color:white;
+                font-size: 35px; */
+                text-align: center;
+                margin: 0;
+                padding:40px 0;
+                width: 100%;
+            }
+
+            #score{
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 1;
+                color : white;
+                font-size: 30px;
+            }
+
+            #btn--yp {
+                box-sizing: content-box;
+                position: fixed;
+                z-index: 9;
+                bottom: 1em;
+                right: 1em;
+                border: solid 1em transparent;
+                width: 4.625em;
+                height: 3.25em;
+                background: url(https://s3-us-west-2.amazonaws.com/s.cdpn.io/2017/icon-yp.svg) 50%/cover content-box;
+                font: 16px/ 1.25 trebuchet ms, sans-serif;
+                text-indent: 200vw;
+                text-shadow: none;
+                filter: grayscale(1) drop-shadow(0 0 1px #e8e0e0);
+                transition: .5s;
+                white-space: nowrap;
+            }
+            #btn--yp:before {
+                box-sizing: inherit;
+                position: absolute;
+                left: 0;
+                bottom: 100%;
+                margin: 1em -.5em;
+                padding: .5em;
+                width: 100%;
+                border-radius: 5px;
+                background: #e8e0e0;
+                color: #000;
+                text-align: center;
+                text-decoration: none;
+                text-indent: 0vw;
+                white-space: normal;
+                animation: float 0.2s ease-in-out infinite alternate;
+                content: attr(data-txt);
+            }
+            #btn--yp:hover, #btn--yp:focus {
+                outline: none;
+                filter: grayscale(0) drop-shadow(0 0 1px crimson);
+            }
+            @keyframes float {
+                to {
+                    transform: translateY(0.75em);
+                }
+            }
+            button span, button span[aria-hidden='true']:after {
+                position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+            }
+
+            button {
+                --hue: 203;
+                --sat: 100%;
+                --lum: 32%;
+                display: block;
+                border: none;
+                margin: 1em auto;
+                padding: 0;
+                position: relative;
+                width: 9em;
+                height: 3em;
+                background: none;
+                font: 3em/ 3.21em advent pro, sans-serif;
+                filter: contrast(0.5);
+                transition: .3s;
+                cursor: pointer;
+            }
+            button:focus, button:hover {
+                outline: none;
+                filter: none;
+            }
+            button:active {
+                transform: translateY(0.25rem);
+            }
+            button:active [aria-hidden='true'] {
+                transform: translateY(var(--ty, 0.25rem));
+            }
+            button:active [aria-hidden='true']:nth-child(2) {
+                --ty: .75rem ;
+            }
+            button span[aria-hidden='true'] {
+                filter: drop-shadow(0.125rem 0.1875rem hsl(var(--hue), calc(var(--sat) - 25%), 25%)) drop-shadow(-0.1875rem -0.125rem hsl(var(--hue), calc(var(--sat) - 41%), calc(var(--lum) + 31%))) drop-shadow(1.5rem 1.5rem 1.5rem rgba(0, 0, 0, 0.75));
+            }
+            button span[aria-hidden='true']:after {
+                background: hsl(var(--hue), var(--sat), var(--lum));
+                clip-path: polygon(100% 0, 91% 91%, 13% 100%, 0 35%);
+                content: "";
+            }
+            button span[aria-hidden='true']:nth-child(2) {
+                --sat: 0%;
+                --lum: 83%;
+            }
+            button span[aria-hidden='true']:nth-child(2):after {
+                clip-path: polygon(3% 21%, 85% 25%, 75% 93%, 14% 87%);
+            }
+            button span:last-child {
+                background: radial-gradient(black, white 83%) 50% 0.125em/0.5em 50%;
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+                filter: drop-shadow(2px 2px #313131);
+            }
+            button:nth-of-type(2) {
+                --hue: 187 ;
+            }
+            @media (max-width: 800px) {
+                html {
+                    font-size: 2vw;
+                }
+            }
+        </style>
+    </head>
+
+    <body>
+        
+        <div id="loading">
+            <div>
+              <div>Loading</div>
+              <div class="progress"><div id="progressbar"></div></div>
+            </div>
+        </div>
+
+        <canvas id="canvas">
+            Sorry but your browser doesn't support the HTML5 canvas element!
+        </canvas>
+
+        <div id='score'>Score: 0</div>
+
+        <div id="gameOver" class="modal-content">
+
+            <button style="outline:none; filter: none;" class="modal-header"><span aria-hidden="true"></span>
+                <span aria-hidden="true"></span><span>Game Over</span>
+            </button>
+            <button class="modal-body" style="outline:none; filter: none;"><span aria-hidden="true"></span>
+                <span aria-hidden="true"></span><span id="finalScore">Total Score: </span>
+            </button>
+            <button id="restartbtn"><span aria-hidden="true"></span>
+                <span aria-hidden="true"></span><span>Restart</span>
+            </button>
+        </div>
+        
+        <div id="gameMenu" class="modal-content" style="display: none;">
+            <button id="playbtn" style="float: left; margin: 0.5em 2em;"><span aria-hidden="true"></span>
+                <span aria-hidden="true"></span><span id="btnText">Start</span>
+            </button>
+            <button id="audiobtn" style="float: right; margin: 0.5em 2em"><span aria-hidden="true"></span>
+                <span aria-hidden="true"></span><span id="btnAudio">Audio ON</span>
+            </button>
+
+            <button style="outline:none; filter: none; width: 20em;"><span aria-hidden="true"></span>
+                <span aria-hidden="true"></span>
+                <span style="font-size: .8em;">
+                    Move: &#8592; &#8594; &#8593; &#8595; Pause: P 
+                </span>
+            </button>
+        </div>
+    </body>
+
+    <audio src='./res/audio/SpaceEngine 0.990 - Steam Release Trailer [YTmp3.net].mp3' id='audio'  allow="autoplay"></audio>
+    <!-- <audio src='/res/audio/footstep.mp3' id='audio2'  allow="autoplay"></audio> -->
+    <audio src='./res/audio/explosion.mp3' id='audio3'  allow="autoplay"></audio>
+    <audio src='./res/audio/laser.mp3' id='audio4'  allow="autoplay"></audio>
+
+    <script type="module" src="final.js"></script>
+
+    <script type="x-shader/x-vertex" id="vertexShader">
+
+        //ASHIMA code for noise generation
+
+        vec3 mod289(vec3 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+
+        vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+
+        vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+
+        vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+        vec3 fade(vec3 t) {return t*t*t*(t*(t*6.0-15.0)+10.0);}
+
+        float pnoise(vec3 P, vec3 rep){
+            vec3 Pi0 = mod(floor(P), rep); // Integer part, modulo period
+            vec3 Pi1 = mod(Pi0 + vec3(1.0), rep); // Integer part + 1, mod period
+            Pi0 = mod289(Pi0);
+            Pi1 = mod289(Pi1);
+            vec3 Pf0 = fract(P); // Fractional part for interpolation
+            vec3 Pf1 = Pf0 - vec3(1.0); // Fractional part - 1.0
+            vec4 ix = vec4(Pi0.x, Pi1.x, Pi0.x, Pi1.x);
+            vec4 iy = vec4(Pi0.yy, Pi1.yy);
+            vec4 iz0 = Pi0.zzzz;
+            vec4 iz1 = Pi1.zzzz;
+
+            vec4 ixy = permute(permute(ix) + iy);
+            vec4 ixy0 = permute(ixy + iz0);
+            vec4 ixy1 = permute(ixy + iz1);
+
+            vec4 gx0 = ixy0 * (1.0 / 7.0);
+            vec4 gy0 = fract(floor(gx0) * (1.0 / 7.0)) - 0.5;
+            gx0 = fract(gx0);
+            vec4 gz0 = vec4(0.5) - abs(gx0) - abs(gy0);
+            vec4 sz0 = step(gz0, vec4(0.0));
+            gx0 -= sz0 * (step(0.0, gx0) - 0.5);
+            gy0 -= sz0 * (step(0.0, gy0) - 0.5);
+
+            vec4 gx1 = ixy1 * (1.0 / 7.0);
+            vec4 gy1 = fract(floor(gx1) * (1.0 / 7.0)) - 0.5;
+            gx1 = fract(gx1);
+            vec4 gz1 = vec4(0.5) - abs(gx1) - abs(gy1);
+            vec4 sz1 = step(gz1, vec4(0.0));
+            gx1 -= sz1 * (step(0.0, gx1) - 0.5);
+            gy1 -= sz1 * (step(0.0, gy1) - 0.5);
+
+            vec3 g000 = vec3(gx0.x,gy0.x,gz0.x);
+            vec3 g100 = vec3(gx0.y,gy0.y,gz0.y);
+            vec3 g010 = vec3(gx0.z,gy0.z,gz0.z);
+            vec3 g110 = vec3(gx0.w,gy0.w,gz0.w);
+            vec3 g001 = vec3(gx1.x,gy1.x,gz1.x);
+            vec3 g101 = vec3(gx1.y,gy1.y,gz1.y);
+            vec3 g011 = vec3(gx1.z,gy1.z,gz1.z);
+            vec3 g111 = vec3(gx1.w,gy1.w,gz1.w);
+
+            vec4 norm0 = taylorInvSqrt(vec4(dot(g000, g000), dot(g010, g010), dot(g100, g100), dot(g110, g110)));
+            g000 *= norm0.x;
+            g010 *= norm0.y;
+            g100 *= norm0.z;
+            g110 *= norm0.w;
+            vec4 norm1 = taylorInvSqrt(vec4(dot(g001, g001), dot(g011, g011), dot(g101, g101), dot(g111, g111)));
+            g001 *= norm1.x;
+            g011 *= norm1.y;
+            g101 *= norm1.z;
+            g111 *= norm1.w;
+
+            float n000 = dot(g000, Pf0);
+            float n100 = dot(g100, vec3(Pf1.x, Pf0.yz));
+            float n010 = dot(g010, vec3(Pf0.x, Pf1.y, Pf0.z));
+            float n110 = dot(g110, vec3(Pf1.xy, Pf0.z));
+            float n001 = dot(g001, vec3(Pf0.xy, Pf1.z));
+            float n101 = dot(g101, vec3(Pf1.x, Pf0.y, Pf1.z));
+            float n011 = dot(g011, vec3(Pf0.x, Pf1.yz));
+            float n111 = dot(g111, Pf1);
+
+            vec3 fade_xyz = fade(Pf0);
+            vec4 n_z = mix(vec4(n000, n100, n010, n110), vec4(n001, n101, n011, n111), fade_xyz.z);
+            vec2 n_yz = mix(n_z.xy, n_z.zw, fade_xyz.y);
+            float n_xyz = mix(n_yz.x, n_yz.y, fade_xyz.x); 
+            return 2.2 * n_xyz;
+        }
+
+        varying vec2 vUv;
+        varying float noise;
+
+        float turbulence( vec3 p ) {
+            float w = 100.0;
+            float t = -.5;
+
+            for (float f = 1.0 ; f <= 10.0 ; f++ ){
+                float power = pow( 2.0, f );
+                t += abs( pnoise( vec3( power * p ), vec3( 10.0, 10.0, 10.0 ) ) / power );
+            }
+            return t;
+        }
+
+        void main() {
+            vUv = uv;
+
+            // 3d noise using the normal, hig freq
+            noise = 10.0 * -.10 * turbulence( .5 * normal );
+            // 3d noise using the position, low frequency
+            float b = 5.0 * pnoise( 0.05 * position, vec3( 100.0 ) );
+            // compose the two noises
+            float displacement = - 10. * noise + b;
+
+            // everything together
+            vec3 newPosition = position + normal * displacement;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4( newPosition, 1.0 );
+        }
+    </script>
+      
+    <script type="x-shader/x-vertex" id="fragmentShader">
+        varying vec2 vUv;
+        varying float noise;
+        uniform sampler2D tExplosion;
+
+        float random( vec3 scale, float seed ){
+            return fract( sin( dot( gl_FragCoord.xyz + seed, scale ) ) * 43758.5453 + seed ) ;
+        }
+
+        void main() {
+            float r = .01 * random( vec3( 12.9898, 78.233, 151.7182 ), 0.0 );
+            vec2 tPos = vec2( 0, 1.3 * noise + r );
+
+            vec4 color = texture2D( tExplosion, tPos );
+            gl_FragColor = vec4( color.rgb, 1.0 );
+        }
+    </script>
+
+</html>
